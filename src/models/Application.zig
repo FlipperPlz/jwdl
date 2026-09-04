@@ -7,19 +7,23 @@ const Allocator = std.mem.Allocator;
 
 const Application = @This();
 
-client: jwdl.Client,
-header: Header,
+client: *jwdl.Client,
+header: *Header,
 
-pub fn init(client: jwdl.Client) Application {
-    return .{
+pub fn init(client: *jwdl.Client, gpa: Allocator) !*Application {
+    const c = try gpa.create(Application);
+
+    c.* = .{
         .client = client,
-        .header = .{}
+        .header = try .init(gpa)
     };
+
+    return c;
 }
 
 pub fn deinit(self: *Application, gpa: Allocator) void {
-    _ = self;
-    _ = gpa;
+    self.header.deinit(gpa);
+    gpa.destroy(self);
 }
 
 pub fn widget(self: *Application) vxfw.Widget {
@@ -31,11 +35,19 @@ pub fn widget(self: *Application) vxfw.Widget {
 }
 
 fn typeErasedEventHandler(ptr: *anyopaque, ctx: *vxfw.EventContext, event: vxfw.Event) anyerror!void {
-    _ = ptr;
+    const self: *Application = @ptrCast(@alignCast(ptr));
+
+    if(self.header.widget().eventHandler) |fun| {
+        try fun(self.header, ctx, event);
+        if (ctx.consume_event) return;
+    }
+
+
     switch (event) {
         .key_press => |key| {
             if (key.matches('q', .{}) or key.matches('c', .{ .ctrl = true })) {
                 ctx.quit = true;
+                ctx.consume_event = true;
             }
         },
         else => {},

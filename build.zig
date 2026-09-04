@@ -7,7 +7,16 @@ pub fn build(b: *std.Build) void {
     const root_module = b.addModule("jwdl", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
+        .optimize = optimize,
     });
+
+    const lib = b.addLibrary(.{
+        .linkage = .dynamic,
+        .name = "jwdl",
+        .root_module = root_module,
+    });
+
+    b.installArtifact(lib);
     
     const vaxis_dependency = b.dependency("vaxis", .{
         .target = target,
