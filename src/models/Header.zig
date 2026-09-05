@@ -1,13 +1,20 @@
 const std = @import("std");
 const jwdl = @import("../main.zig").jwdl;
 const vxfw = @import("../main.zig").vxfw;
-const tabs = @import("header_tabs/tabs.zig");
+const ITab = @import("../widgets/Tab.zig");
 
 const Allocator = std.mem.Allocator;
 
+pub const tab_imports = struct {
+    pub const ConnectionTab = @import("header/ConnectionTab.zig");
+    pub const DownloadTab = @import("header/DownloadTab.zig");
+    pub const SongsPageTab = @import("header/SongsPageTab.zig");
+    pub const DownloadsPageTab = @import("header/DownloadsPageTab.zig");
+};
+
 const Header = @This();
 
-tab_list: []*tabs.ITab,
+tab_list: []*ITab,
 
 pub fn widget(self: *Header) vxfw.Widget {
     return .{
@@ -19,11 +26,11 @@ pub fn widget(self: *Header) vxfw.Widget {
 
 pub fn init(allocator: Allocator) std.mem.Allocator.Error!*Header {
     const self = try allocator.create(Header);
-    const decls = comptime std.meta.declarations(tabs.TabList);
-    const list = try allocator.alloc(*tabs.ITab, decls.len);
+    const decls = comptime std.meta.declarations(tab_imports);
+    const list = try allocator.alloc(*ITab, decls.len);
 
     inline for (decls, 0..) |decl, i| {
-        const TabType = @field(tabs.TabList, decl.name);
+        const TabType = @field(tab_imports, decl.name);
         const tab_ptr = try TabType.init(allocator);
         list[i] = &tab_ptr.interface;
     }
@@ -49,7 +56,7 @@ fn headerEventHandler(ptr: *anyopaque, ctx: *vxfw.EventContext, event: vxfw.Even
                 const draw_title_width: u16 = 4;
                 var col: u16 = draw_title_width;
 
-                var clicked_tab: ?*tabs.ITab = null;
+                var clicked_tab: ?*ITab = null;
                 var clicked_tab_start: u16 = 0;
 
                 for (self.tab_list, 0..) |tab, i| {
@@ -153,7 +160,7 @@ pub fn drawHeader(ptr: *anyopaque, ctx: vxfw.DrawContext) std.mem.Allocator.Erro
 }
 
 const AppendTabContext = struct {
-    tab: tabs.ITab = undefined,
+    tab: ITab = undefined,
     state: *anyopaque,
     sub_surfaces: []vxfw.SubSurface,
     index: usize = 0,

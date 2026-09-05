@@ -9,7 +9,9 @@ pub const models = struct {
 };
 
 test {
-    std.testing.refAllDecls(models.Header);
+    _ = @import("models/Header.zig");
+    _ = @import("models/header/ConnectionTab.zig");
+    _ = @import("widgets/Dropdown.zig");
 }
 
 pub fn main(init: std.process.Init) !void {

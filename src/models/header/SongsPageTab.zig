@@ -1,22 +1,22 @@
 const std = @import("std");
 const vaxis = @import("../../main.zig").vaxis;
 const vxfw = @import("../../main.zig").vxfw;
-const tabs = @import("tabs.zig");
+const ITab = @import("../../widgets/Tab.zig");
 
-const DownloadsPageTab = @This();
+const SongsPageTab = @This();
 
-pub const vtable = tabs.ITab.createVTable(DownloadsPageTab, .{
+pub const vtable = ITab.createVTable(SongsPageTab, .{
     .tabContentDrawFn = tabContentDraw,
     .destroyFn = deinit,
 });
 
-interface: tabs.ITab = .{
+interface: ITab = .{
     .ptr = undefined,
     .vtable = &vtable
 },
 
-pub fn init(allocator: std.mem.Allocator) std.mem.Allocator.Error!*DownloadsPageTab {
-    const t = try allocator.create(DownloadsPageTab);
+pub fn init(allocator: std.mem.Allocator) std.mem.Allocator.Error!*SongsPageTab {
+    const t = try allocator.create(SongsPageTab);
 
     t.* = .{
         .interface = .{
@@ -28,7 +28,7 @@ pub fn init(allocator: std.mem.Allocator) std.mem.Allocator.Error!*DownloadsPage
 }
 
 pub fn deinit(ptr: *anyopaque, allocator: std.mem.Allocator) void {
-    const self: *DownloadsPageTab = @ptrCast(@alignCast(ptr));
+    const self: *SongsPageTab = @ptrCast(@alignCast(ptr));
 
     if(self.interface.title) |title| allocator.free(title);
 
@@ -36,19 +36,12 @@ pub fn deinit(ptr: *anyopaque, allocator: std.mem.Allocator) void {
 }
 
 fn tabContentDraw(ptr: *anyopaque, ctx: vxfw.DrawContext) std.mem.Allocator.Error!vxfw.Surface {
-    const self: *DownloadsPageTab = @ptrCast(@alignCast(ptr));
-
-    const width: u16 = 20;
-    const height: u16 = 10;
-
-    const buf = try ctx.arena.alloc(vaxis.Cell, width * height);
-    @memset(buf, .{
-        .style = .{ .bg = .{ .index = 7 } },
-    });
+    const self: *SongsPageTab = @ptrCast(@alignCast(ptr));
+    _ = ctx;
 
     return .{
-        .size = .{ .width = width, .height = height },
-        .buffer = buf,
+        .size = .{ },
+        .buffer = &.{},
         .children = &.{},
         .widget = self.interface.widget(),
     };
